@@ -6,10 +6,16 @@ foreach($element in $myArray)
      ECHO $element
  }
 
-[hashtable]$properties = @{
+
+
+
+
+$properties = @{
     firstname = 'Prateek'
     lastname = 'Singh'
     }
+
+
 
     $o = New-Object psobject -Property $properties;
     
