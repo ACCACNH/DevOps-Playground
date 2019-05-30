@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "MyAmazingVmName": {
+      "value": "PabloVM"
+    },
+    "MyAmazingVmAdminUserName": {
+      "value": "admin"
+    },
+    "fileToInstall": {
+      "value": "textFile.txt"
+    },
+    "folderToInstall": {
+      "value": "C:\\Users\\Pavils.gulenko\\source\\repos\\MyMagnificentResourceGroup\\MyMagnificentResourceGroup\\Artifacts"
+    },
+    "MyUnbelievablePublicIPDnsName": {
+      "value": "pablostestingground"
+    }
+  }
+}
