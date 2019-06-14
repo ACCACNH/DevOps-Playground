@@ -1,0 +1,260 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "FairlyAwesomeStorageType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "MyAmazingVmName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "MyAmazingVmAdminUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "MyAmazingVmAdminPassword": {
+      "type": "securestring"
+    },
+    "MyAmazingVmWindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2012-R2-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "Windows-Server-Technical-Preview"
+      ]
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    },
+    "fileToInstall": {
+      "type": "string",
+      "defaultValue": "azuredeploy.json",
+      "metadata": {
+        "description": "File from staging to be installed on the VM"
+      }
+    },
+    "folderToInstall": {
+      "type": "string",
+      "defaultValue": ".",
+      "metadata": {
+        "description": "Folder containing the files to install"
+      }
+    },
+    "MyUnbelievablePublicIPDnsName": {
+      "type": "string",
+      "minLength": 1
+    }},
+  "variables": {
+    "FairlyAwesomeStorageName": "[concat('FairlyAwesomeStorage', uniqueString(resourceGroup().id))]",
+    "ExtraordinaryVMPrefix": "10.0.0.0/16",
+    "ExtraordinaryVMSubnet1Name": "Subnet-1",
+    "ExtraordinaryVMSubnet1Prefix": "10.0.0.0/24",
+    "ExtraordinaryVMSubnet2Name": "Subnet-2",
+    "ExtraordinaryVMSubnet2Prefix": "10.0.1.0/24",
+    "MyAmazingVmImagePublisher": "MicrosoftWindowsServer",
+    "MyAmazingVmImageOffer": "WindowsServer",
+    "MyAmazingVmOSDiskName": "MyAmazingVmOSDisk",
+    "MyAmazingVmVmSize": "Standard_D2_v2",
+    "MyAmazingVmVnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'ExtraordinaryVM')]",
+    "MyAmazingVmSubnetRef": "[concat(variables('MyAmazingVmVnetID'), '/subnets/', variables('ExtraordinaryVMSubnet1Name'))]",
+    "MyAmazingVmStorageAccountContainerName": "vhds",
+    "MyAmazingVmNicName": "[concat(parameters('MyAmazingVmName'), 'NetworkInterface')]",
+    "MyUniqueDSCScriptArchiveFolder": "DSC",
+    "MyUniqueDSCScriptArchiveFileName": "MyUniqueDSCScript.zip",
+    "MyUnbelievablePublicIPName": "MyUnbelievablePublicIP"
+  },
+  "resources": [
+    {
+      "name": "[variables('FairlyAwesomeStorageName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('FairlyAwesomeStorageType')]"
+      },
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "FairlyAwesomeStorage"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "ExtraordinaryVM",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "ExtraordinaryVM"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('ExtraordinaryVMPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('ExtraordinaryVMSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('ExtraordinaryVMSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('ExtraordinaryVMSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('ExtraordinaryVMSubnet2Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('MyAmazingVmNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'ExtraordinaryVM')]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('MyUnbelievablePublicIPName'))]"
+      ],
+      "tags": {
+        "displayName": "MyAmazingVmNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('MyAmazingVmSubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('MyUnbelievablePublicIPName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('MyAmazingVmName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('FairlyAwesomeStorageName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('MyAmazingVmNicName'))]"
+      ],
+      "tags": {
+        "displayName": "MyAmazingVm"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('MyAmazingVmVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('MyAmazingVmName')]",
+          "adminUsername": "[parameters('MyAmazingVmAdminUsername')]",
+          "adminPassword": "[parameters('MyAmazingVmAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('MyAmazingVmImagePublisher')]",
+            "offer": "[variables('MyAmazingVmImageOffer')]",
+            "sku": "[parameters('MyAmazingVmWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "MyAmazingVmOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('FairlyAwesomeStorageName')), '2016-01-01').primaryEndpoints.blob, variables('MyAmazingVmStorageAccountContainerName'), '/', variables('MyAmazingVmOSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('MyAmazingVmNicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "name": "Microsoft.Powershell.DSC",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('MyAmazingVmName'))]"
+          ],
+          "tags": {
+            "displayName": "MyUniqueDSCScript"
+          },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.9",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "configuration": {
+                "url": "[concat(parameters('_artifactsLocation'), '/', variables('MyUniqueDSCScriptArchiveFolder'), '/', variables('MyUniqueDSCScriptArchiveFileName'))]",
+                "script": "MyUniqueDSCScript.ps1",
+                "function": "Main"
+              },
+              "configurationArguments": {
+                "nodeName": "[parameters('MyAmazingVmName')]",
+                "artifactsLocation": "[parameters('_artifactsLocation')]",
+                "fileToInstall": "[parameters('fileToInstall')]",
+                "folderToInstall": "[parameters('folderToInstall')]"
+              }
+            },
+            "protectedSettings": {
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "[variables('MyUnbelievablePublicIPName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "MyUnbelievablePublicIP"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('MyUnbelievablePublicIPDnsName')]"
+        }
+      }
+    }],
+  "outputs": {}
+}
