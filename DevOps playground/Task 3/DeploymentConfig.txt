@@ -1,0 +1,5 @@
+Mode: Test
+Deploy in Test build
+Configurations: Test
+
+Everything is built in Test configuration

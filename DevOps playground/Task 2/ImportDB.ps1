@@ -18,7 +18,7 @@ if ($Services -eq $null)
 {
     exit
 }
-$loadBac = Microsoft.SqlServer.Dac.BacPackage::Load($OutputFile)
+$loadBac = [Microsoft.SqlServer.Dac.BacPackage]::Load($OutputFile)
 # Start the actual export.
 Write-Host "Starting backup at $DatabaseName at $now"  
 $Watch = New-Object System.Diagnostics.StopWatch

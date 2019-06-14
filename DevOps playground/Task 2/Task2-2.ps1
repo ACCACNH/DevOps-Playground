@@ -7,6 +7,7 @@ $adminSqlLogin = "SqlAdmin"
 $password = "OmegaStrongSQLPassword1"
 
 [string[]]$dbNames = "db-$(Get-Random)", "db-$(Get-Random)", "db-$(Get-Random)"
+$emptyDbName = "db-$(Get-Random)"
 
 $startIp = "0.0.0.0"
 $endIp = "255.255.255.255"
@@ -56,12 +57,21 @@ foreach ($dbName in $dbNames) {
             );
      '
     }
+
     Invoke-Sqlcmd @QueryParams
+
 $QueryParams.Query = "INSERT INTO Persons (PersonID,LastName,FirstName,Address,City) VALUES (1,'Gulenko','Pablo','RandomAdress','Riga');"
 Invoke-Sqlcmd @QueryParams
 }
 
+New-AzSqlDatabase  -ResourceGroupName $ResourceGroupName `
+        -ServerName $serverName `
+        -DatabaseName $emptyDbName `
+        -RequestedServiceObjectiveName "S0" `
+
+
 $SqlConnection = New-Object System.Data.SqlClient.SqlConnection
 $SqlConnection.ConnectionString = "Server = $($server.FullyQualifiedDomainName); Database = $($dbNames[0]); Integrated Security = False; User ID = $adminSqlLogin; Password = $password;"
+
 .\ExportDB.ps1 -ConnectionString $SqlConnection.ConnectionString -DatabaseName $dbNames[0] -OutputFile "C:\Users\Pavils.gulenko\Desktop\DevOps playground\Task 2\Backup\$($dbNames[0]).bacpac"
-.\ImportDB.ps1 -ConnectionString $SqlConnection.ConnectionString -DatabaseName $dbNames[2] -OutputFile "C:\Users\Pavils.gulenko\Desktop\DevOps playground\Task 2\Backup\$($dbNames[0]).bacpac"
+.\ImportDB.ps1 -ConnectionString $SqlConnection.ConnectionString -DatabaseName $emptyDbName -OutputFile "C:\Users\Pavils.gulenko\Desktop\DevOps playground\Task 2\Backup\$($dbNames[0]).bacpac"
